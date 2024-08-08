@@ -7,6 +7,7 @@
     <style>
         /* Header Styling */
         header {
+            margin: -1em -1em 1em -1em;
             text-align: center;
             padding: 1em;
             background-color: #4CAF50;
@@ -76,10 +77,8 @@
     <!-- Back Button -->
     <button class="cta-button" onclick="moveToSection('initial')">Back</button>
 
-   
-
     <!-- Create Livewell Code -->
-    <button class="cta-button" id="generateCodeBtn" onclick="generateLivewellCode()">Generate Livewell Code</button>
+    <button class="cta-button" id="generateCodeBtn" onclick="generateLivewellCode()">Livewell Code</button>
 
     <!-- Refer to Join Livewell -->
     <button class="cta-button" onclick="moveToSection('referralFormSection')">Refer to Join Livewell</button>
@@ -177,60 +176,47 @@
         // Generate a unique Livewell Code
         function generateLivewellCode() {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let code = 'LW' + Array.from({ length: 10 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+            let code = 'LW' + Array.from({ length: 5 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+            alert('Your Livewell Code (LW) is: ' + code);
             generatedReferralCode = code;
-            document.getElementById('generateCodeBtn').innerText = `Code Generated: ${code}`;
+
+            // Move to Referral Form Section
+            moveToSection('referralFormSection');
+            document.getElementById('referralCode').value = generatedReferralCode;
         }
 
-        // Check rental code
+        // Check Rental Code
         function checkRentalCode() {
-            const codeInput = document.getElementById('rentalCodeInput').value;
-            if (codeInput === 'RR') {
+            const inputCode = document.getElementById("rentalCodeInput").value.trim();
+            if (inputCode !== '') {
+                generatedRentalCode = 'RR-' + inputCode;
                 moveToSection('formSection');
+                document.getElementById('rentalCode').value = generatedRentalCode;
             } else {
                 document.getElementById('noCodeMessage').classList.remove('hidden');
+                document.getElementById('noCodeMessageRef').classList.remove('hidden');
             }
         }
 
-        // Submit Membership Form
+        // Submit the membership form
         function submitForm(formId, subject) {
             const form = document.getElementById(formId);
             const formData = new FormData(form);
-            const data = {
-                method: 'POST',
-                body: JSON.stringify(Object.fromEntries(formData)),
-                headers: { 'Content-Type': 'application/json' },
-            };
 
-            fetch('https://your-server-endpoint.com/submit', data)
-                .then(response => response.json())
-                .then(result => {
-                    alert('Form submitted successfully');
-                    window.location.href = 'https://wa.me/?text=' + encodeURIComponent('I am interested in the Livewell Housing Solutions membership. Please get back to me.');
-                })
-                .catch(error => console.error('Error:', error));
+            const mailtoLink = `mailto:mondaykingsley80@gmail.com,livewell.equity@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formatFormData(formData))}`;
+            window.location.href = mailtoLink;
         }
 
-        // Submit Referral Form
-        function submitReferralForm() {
-            const form = document.getElementById('referralForm');
-            const formData = new FormData(form);
-            const data = {
-                method: 'POST',
-                body: JSON.stringify(Object.fromEntries(formData)),
-                headers: { 'Content-Type': 'application/json' },
-            };
+        // Format form data into a readable string
+        function formatFormData(formData) {
+            const entries = Array.from(formData.entries());
+            return entries.map(([key, value]) => `${key}: ${value}`).join('\n');
+        }
 
-            fetch('https://your-server-endpoint.com/submit-referral', data)
-                .then(response => response.json())
-                .then(result => {
-                    alert('Referral form submitted successfully');
-                    window.location.href = 'https://wa.me/?text=' + encodeURIComponent('I am referring someone to join Livewell Housing Solutions. Please get back to me.');
-                })
-                .catch(error => console.error('Error:', error));
+        // Submit the referral form
+        function submitReferralForm() {
+            submitForm('referralForm', 'Livewell Referral');
         }
     </script>
 </body>
 </html>
-
-
