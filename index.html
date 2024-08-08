@@ -76,11 +76,10 @@
     <!-- Back Button -->
     <button class="cta-button" onclick="moveToSection('initial')">Back</button>
 
-    <!-- Get Started Button -->
-    <button class="cta-button" onclick="moveToSection('registration')">Get Started</button>
+   
 
     <!-- Create Livewell Code -->
-    <button class="cta-button" onclick="moveToSection('code-section')">Livewell Code</button>
+    <button class="cta-button" id="generateCodeBtn" onclick="generateLivewellCode()">Generate Livewell Code</button>
 
     <!-- Refer to Join Livewell -->
     <button class="cta-button" onclick="moveToSection('referralFormSection')">Refer to Join Livewell</button>
@@ -97,7 +96,8 @@
         <label for="rentalCode">Enter Rental Serial Code (RR):</label>
         <input type="text" id="rentalCodeInput" placeholder="Enter your rental code" required>
         <button class="cta-button" id="checkCodeBtn" onclick="checkRentalCode()">Check Code</button>
-        <p id="noCodeMessage" class="hidden">Don't have a code? <a href="#" id="showRegistrationFormLink" onclick="showRegistrationForm()">Register here</a></p>
+        <p id="noCodeMessage" class="hidden">Don't have a code? <a href="#referralFormSection" onclick="moveToSection('referralFormSection')">Register here</a></p>
+        <p id="noCodeMessageRef" class="hidden">Don't have a code? <a href="#referralFormSection" onclick="moveToSection('referralFormSection')">Refer to Join Livewell</a></p>
         <button class="cta-button" onclick="moveToSection('initial')">Back</button>
         <p> NB: <strong>Don't type in the text area; simply tap the "Check Code" button.</strong></p>
     </div>
@@ -132,20 +132,20 @@
     <section id="referralFormSection" class="form-section hidden">
         <h2>Join Livewell Membership Form</h2>
         <form id="referralForm" enctype="multipart/form-data" onsubmit="submitReferralForm(); return false;">
-            <label for="referralName">Your Name:</label>
-            <input type="text" id="referralName" name="referralName" placeholder="Enter your name" required>
+            <label for="referrerName">Referrer Name:</label>
+            <input type="text" id="referrerName" name="referrerName" placeholder="Enter referrer's name" required>
 
-            <label for="referralEmail">Your Email:</label>
-            <input type="email" id="referralEmail" name="referralEmail" placeholder="Enter your email" required>
+            <label for="referrerEmail">Referrer Email:</label>
+            <input type="email" id="referrerEmail" name="referrerEmail" placeholder="Enter referrer's email" required>
 
-            <label for="referralPhone">Your Phone Number:</label>
-            <input type="tel" id="referralPhone" name="referralPhone" placeholder="Enter your phone number" required>
+            <label for="referredName">Referred Name:</label>
+            <input type="text" id="referredName" name="referredName" placeholder="Enter referred person's name" required>
 
-            <label for="referralRentalCode">Rental Serial Code (LW):</label>
-            <input type="text" id="referralRentalCode" name="referralRentalCode" placeholder="Rental Serial Code" required>
+            <label for="referredEmail">Referred Email:</label>
+            <input type="email" id="referredEmail" name="referredEmail" placeholder="Enter referred person's email" required>
 
-            <label for="referredEmailIncentive">Type Your Incentive Member Email:</label>
-            <input type="email" id="referredEmailIncentive" name="referredEmailIncentive" placeholder="Incentive Membership email" required>
+            <label for="referralCode">Referral Code (LW):</label>
+            <input type="text" id="referralCode" name="referralCode" placeholder="Enter referral code" required>
 
             <button type="submit" class="cta-button">Submit</button>
         </form>
@@ -154,7 +154,7 @@
 
     <script>
         let generatedRentalCode = '';
-        let generatedReferralRentalCode = '';
+        let generatedReferralCode = '';
 
         // Toggle the Get Started button
         function toggleGetStarted() {
@@ -170,68 +170,67 @@
                 section.classList.add('hidden');
             });
 
-            // Show the target section
+            // Show the selected section
             document.getElementById(sectionId).classList.remove('hidden');
         }
 
-        // Generate a unique rental code
-        function generateRentalCode() {
-            return 'RR' + Math.random().toString(36).substr(2, 9).toUpperCase();
-        }
-
-        // Generate a unique Livewell code
+        // Generate a unique Livewell Code
         function generateLivewellCode() {
-            return 'LW' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let code = 'LW' + Array.from({ length: 10 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+            generatedReferralCode = code;
+            document.getElementById('generateCodeBtn').innerText = `Code Generated: ${code}`;
         }
 
-        // Check Rental Code
+        // Check rental code
         function checkRentalCode() {
-            const codeInput = document.getElementById("rentalCodeInput").value;
-
-            if (codeInput === '') {
-                generatedRentalCode = generateRentalCode();
-                document.getElementById("rentalCodeInput").value = generatedRentalCode;
-                document.getElementById("noCodeMessage").classList.remove("hidden");
-                document.getElementById("membershipForm").classList.remove("hidden");
+            const codeInput = document.getElementById('rentalCodeInput').value;
+            if (codeInput === 'RR') {
+                moveToSection('formSection');
             } else {
-                document.getElementById("noCodeMessage").classList.add("hidden");
-                alert("Rental Code exists, proceed with registration!");
+                document.getElementById('noCodeMessage').classList.remove('hidden');
             }
         }
 
-        // Submit the membership form
-        function submitForm(formId, formType) {
+        // Submit Membership Form
+        function submitForm(formId, subject) {
             const form = document.getElementById(formId);
             const formData = new FormData(form);
-            console.log(formType + " Form Data:", formData);
+            const data = {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: { 'Content-Type': 'application/json' },
+            };
 
-            // Add the generated code to the input if missing
-            if (!formData.get('rentalCode')) {
-                formData.set('rentalCode', generatedRentalCode);
-            }
-
-            // Redirect to WhatsApp after submission
-            window.location.href = "https://wa.me/2347045786155?text=Hello, I've successfully registered as an Incentive Member with my code: " + formData.get('rentalCode');
+            fetch('https://your-server-endpoint.com/submit', data)
+                .then(response => response.json())
+                .then(result => {
+                    alert('Form submitted successfully');
+                    window.location.href = 'https://wa.me/?text=' + encodeURIComponent('I am interested in the Livewell Housing Solutions membership. Please get back to me.');
+                })
+                .catch(error => console.error('Error:', error));
         }
 
-        // Submit the referral form
+        // Submit Referral Form
         function submitReferralForm() {
-            const form = document.getElementById("referralForm");
+            const form = document.getElementById('referralForm');
             const formData = new FormData(form);
-            console.log("Referral Form Data:", formData);
+            const data = {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: { 'Content-Type': 'application/json' },
+            };
 
-            // After submission, redirect to WhatsApp
-            window.location.href = "https://wa.me/2347045786155?text=Hello, I've referred a new member with my code: " + formData.get('referralRentalCode');
-        }
-
-
-
-        // Show registration form
-        function showRegistrationForm() {
-            generatedRentalCode = generateRentalCode();
-            moveToSection('formSection');
-            document.getElementById("rentalCode").value = generatedRentalCode;
+            fetch('https://your-server-endpoint.com/submit-referral', data)
+                .then(response => response.json())
+                .then(result => {
+                    alert('Referral form submitted successfully');
+                    window.location.href = 'https://wa.me/?text=' + encodeURIComponent('I am referring someone to join Livewell Housing Solutions. Please get back to me.');
+                })
+                .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
 </html>
+
+
